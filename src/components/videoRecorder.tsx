@@ -1,5 +1,7 @@
 /* eslint-disable formatjs/no-literal-string-in-jsx */
 import React, { useRef, useState, useEffect } from "react";
+import { Modal, Box, Button, IconButton, Typography } from "@mui/material";
+// import CameraIcon from "@mui/icons-material/PhotoCamera";
 
 const VideoRecorder: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -7,8 +9,9 @@ const VideoRecorder: React.FC = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const [recording, setRecording] = useState<boolean>(false);
   const [videoURL, setVideoURL] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState<number>(60); // Countdown starts at 60 seconds
+  const [countdown, setCountdown] = useState<number>(10); // Countdown starts at 60 seconds
   const [usingBackCamera, setUsingBackCamera] = useState<boolean>(false); // Toggle between front and back cameras
+  const [open, setOpen] = useState<boolean>(false); // Modal open state
 
   const startCamera = async (facingMode: "user" | "environment") => {
     if (streamRef.current) {
@@ -39,9 +42,6 @@ const VideoRecorder: React.FC = () => {
   };
 
   useEffect(() => {
-    // Start with the front camera by default
-    startCamera("user");
-
     // Clean up the stream when the component unmounts
     return () => {
       if (streamRef.current) {
@@ -60,7 +60,7 @@ const VideoRecorder: React.FC = () => {
   const startRecording = () => {
     if (videoRef.current && videoRef.current.srcObject) {
       setRecording(true);
-      setCountdown(6); // Reset countdown to 60 seconds
+      setCountdown(10); // Reset countdown to 60 seconds
 
       // Get the stream from the video element
       const stream = videoRef.current.srcObject as MediaStream;
@@ -116,26 +116,94 @@ const VideoRecorder: React.FC = () => {
     }
   };
 
+  const handleOpen = () => {
+    setOpen(true);
+    // Start with the front camera by default
+    startCamera("user");
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+    }
+  };
+
   return (
     <div>
-      <video
-        ref={videoRef}
-        autoPlay
-        muted
-        style={{ width: "300px", height: "200px" }}
-      />
-      <br />
-      <button onClick={toggleCamera}>
-        Switch to {usingBackCamera ? "Front" : "Back"} Camera
-      </button>
-      <br />
-      {!recording ? (
-        <button onClick={startRecording}>Start Recording</button>
-      ) : (
-        <button onClick={stopRecording}>Stop Recording</button>
-      )}
-      <br />
-      {recording && <h3>Time Remaining: {countdown} seconds</h3>}
+      <Button variant="contained" onClick={handleOpen}>
+        Open Camera
+      </Button>
+
+      <Modal open={open} onClose={handleClose}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "90vw",
+            height: "90vh",
+            bgcolor: "black",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            outline: "none",
+          }}
+        >
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            style={{ width: "100%", height: "auto", maxHeight: "80%" }}
+          />
+          {recording && (
+            <Typography sx={{ color: "white", position: "absolute", top: 10 }}>
+              Time Remaining: {countdown} seconds
+            </Typography>
+          )}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              position: "absolute",
+              bottom: 20,
+            }}
+          >
+            <IconButton
+              onClick={!recording ? startRecording : stopRecording}
+              sx={{
+                bgcolor: "white",
+                width: 80,
+                height: 80,
+                borderRadius: "50%",
+                border: "5px solid red",
+              }}
+            >
+              <div style={{ fontSize: 40, color: recording ? "red" : "black" }}>
+                camera icon
+              </div>
+              {/* <CameraIcon
+                sx={{ fontSize: 40, color: recording ? "red" : "black" }}
+              /> */}
+            </IconButton>
+          </Box>
+          <Button
+            sx={{
+              position: "absolute",
+              top: 10,
+              right: 10,
+              color: "white",
+            }}
+            onClick={toggleCamera}
+          >
+            Switch to {usingBackCamera ? "Front" : "Back"} Camera
+          </Button>
+        </Box>
+      </Modal>
+
       {videoURL && (
         <div>
           <h3>Recorded Video:</h3>
