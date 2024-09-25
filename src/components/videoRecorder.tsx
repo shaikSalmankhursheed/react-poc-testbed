@@ -4,34 +4,50 @@ import React, { useRef, useState, useEffect } from "react";
 const VideoRecorder: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [recording, setRecording] = useState<boolean>(false);
   const [videoURL, setVideoURL] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number>(60); // Countdown starts at 60 seconds
   const [usingBackCamera, setUsingBackCamera] = useState<boolean>(false); // Toggle between front and back cameras
 
-  const startCamera = (facingMode: "user" | "environment") => {
-    // Request access to the webcam with the specified facing mode
-    navigator.mediaDevices
-      .getUserMedia({
+  const startCamera = async (facingMode: "user" | "environment") => {
+    if (streamRef.current) {
+      // Stop the current stream before switching cameras
+      streamRef.current.getTracks().forEach((track) => track.stop());
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { exact: facingMode } },
-      })
-      .then((stream) => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      })
-      .catch((error) => {
-        console.error("Error accessing the camera: ", error);
-        // Fallback to the front camera if the back camera is not available
-        if (facingMode === "environment") {
-          startCamera("user");
-        }
       });
+
+      // Store the new stream
+      streamRef.current = stream;
+
+      // Assign the stream to the video element
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error) {
+      console.error("Error accessing the camera: ", error);
+
+      // Fallback to the front camera if the back camera is not available
+      if (facingMode === "environment") {
+        startCamera("user");
+      }
+    }
   };
 
   useEffect(() => {
     // Start with the front camera by default
     startCamera("user");
+
+    // Clean up the stream when the component unmounts
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
   }, []);
 
   const toggleCamera = () => {
