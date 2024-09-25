@@ -9,12 +9,19 @@ const VideoRecorder: React.FC = () => {
   const [countdown, setCountdown] = useState<number>(60); // Countdown starts at 60 seconds
 
   useEffect(() => {
-    // Request access to the webcam
-    navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    });
+    // Request access to the webcam and specifically the back camera
+    navigator.mediaDevices
+      .getUserMedia({
+        video: { facingMode: { exact: "environment" } },
+      })
+      .then((stream) => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      })
+      .catch((error) => {
+        console.error("Error accessing the back camera: ", error);
+      });
   }, []);
 
   const startRecording = () => {
@@ -78,7 +85,12 @@ const VideoRecorder: React.FC = () => {
 
   return (
     <div>
-      <video ref={videoRef} autoPlay muted style={{ width: "300px", height: "200px" }} />
+      <video
+        ref={videoRef}
+        autoPlay
+        muted
+        style={{ width: "300px", height: "200px" }}
+      />
       <br />
       {!recording ? (
         <button onClick={startRecording}>Start Recording</button>
@@ -90,7 +102,11 @@ const VideoRecorder: React.FC = () => {
       {videoURL && (
         <div>
           <h3>Recorded Video:</h3>
-          <video src={videoURL} controls style={{ width: "300px", height: "200px" }} />
+          <video
+            src={videoURL}
+            controls
+            style={{ width: "300px", height: "200px" }}
+          />
         </div>
       )}
     </div>
