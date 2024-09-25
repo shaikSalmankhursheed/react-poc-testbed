@@ -7,12 +7,13 @@ const VideoRecorder: React.FC = () => {
   const [recording, setRecording] = useState<boolean>(false);
   const [videoURL, setVideoURL] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number>(60); // Countdown starts at 60 seconds
+  const [usingBackCamera, setUsingBackCamera] = useState<boolean>(false); // Toggle between front and back cameras
 
-  useEffect(() => {
-    // Request access to the webcam and specifically the back camera
+  const startCamera = (facingMode: "user" | "environment") => {
+    // Request access to the webcam with the specified facing mode
     navigator.mediaDevices
       .getUserMedia({
-        video: { facingMode: { exact: "environment" } },
+        video: { facingMode: { exact: facingMode } },
       })
       .then((stream) => {
         if (videoRef.current) {
@@ -20,9 +21,25 @@ const VideoRecorder: React.FC = () => {
         }
       })
       .catch((error) => {
-        console.error("Error accessing the back camera: ", error);
+        console.error("Error accessing the camera: ", error);
+        // Fallback to the front camera if the back camera is not available
+        if (facingMode === "environment") {
+          startCamera("user");
+        }
       });
+  };
+
+  useEffect(() => {
+    // Start with the front camera by default
+    startCamera("user");
   }, []);
+
+  const toggleCamera = () => {
+    // Toggle between front and back cameras
+    const newFacingMode = usingBackCamera ? "user" : "environment";
+    setUsingBackCamera(!usingBackCamera);
+    startCamera(newFacingMode);
+  };
 
   const startRecording = () => {
     if (videoRef.current && videoRef.current.srcObject) {
@@ -91,6 +108,10 @@ const VideoRecorder: React.FC = () => {
         muted
         style={{ width: "300px", height: "200px" }}
       />
+      <br />
+      <button onClick={toggleCamera}>
+        Switch to {usingBackCamera ? "Front" : "Back"} Camera
+      </button>
       <br />
       {!recording ? (
         <button onClick={startRecording}>Start Recording</button>
