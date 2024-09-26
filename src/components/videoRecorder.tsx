@@ -1,21 +1,25 @@
-/* eslint-disable formatjs/no-literal-string-in-jsx */
 import React, { useRef, useState, useEffect } from "react";
 import { Modal, Box, Button, IconButton, Typography } from "@mui/material";
-// import CameraIcon from "@mui/icons-material/PhotoCamera";
 
 const VideoRecorder: React.FC = () => {
+  const countDownInSeconds = 60 * 5;
+  const timerValueInMs = 60000;
+  const ticking = 1000 / 5;
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const countdownIntervalRef = useRef<any>(null);
+  const timeoutRef = useRef<any>(null);
+
   const [recording, setRecording] = useState<boolean>(false);
   const [videoURL, setVideoURL] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState<number>(10); // Countdown starts at 60 seconds
-  const [usingBackCamera, setUsingBackCamera] = useState<boolean>(false); // Toggle between front and back cameras
-  const [open, setOpen] = useState<boolean>(false); // Modal open state
+  const [countdown, setCountdown] = useState<number>(countDownInSeconds);
+  const [usingBackCamera, setUsingBackCamera] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(false);
 
   const startCamera = async (facingMode: "user" | "environment") => {
     if (streamRef.current) {
-      // Stop the current stream before switching cameras
       streamRef.current.getTracks().forEach((track) => track.stop());
     }
 
@@ -24,17 +28,14 @@ const VideoRecorder: React.FC = () => {
         video: { facingMode: { exact: facingMode } },
       });
 
-      // Store the new stream
       streamRef.current = stream;
 
-      // Assign the stream to the video element
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
     } catch (error) {
       console.error("Error accessing the camera: ", error);
 
-      // Fallback to the front camera if the back camera is not available
       if (facingMode === "environment") {
         startCamera("user");
       }
@@ -42,16 +43,15 @@ const VideoRecorder: React.FC = () => {
   };
 
   useEffect(() => {
-    // Clean up the stream when the component unmounts
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
       }
+      clearCountdownInterval(); // Clear countdown when component unmounts
     };
   }, []);
 
   const toggleCamera = () => {
-    // Toggle between front and back cameras
     const newFacingMode = usingBackCamera ? "user" : "environment";
     setUsingBackCamera(!usingBackCamera);
     startCamera(newFacingMode);
@@ -60,65 +60,66 @@ const VideoRecorder: React.FC = () => {
   const startRecording = () => {
     if (videoRef.current && videoRef.current.srcObject) {
       setRecording(true);
-      setCountdown(10); // Reset countdown to 60 seconds
+      setCountdown(countDownInSeconds);
 
-      // Get the stream from the video element
       const stream = videoRef.current.srcObject as MediaStream;
       const mediaRecorder = new MediaRecorder(stream);
       const chunks: BlobPart[] = [];
 
-      // Store the media recorder instance
       mediaRecorderRef.current = mediaRecorder;
 
-      // Handle data available (video chunks)
       mediaRecorder.ondataavailable = (e: BlobEvent) => {
         chunks.push(e.data);
       };
 
-      // When the recording stops, create a blob from the video chunks
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunks, { type: "video/mp4" });
         const videoURL = URL.createObjectURL(blob);
         setVideoURL(videoURL);
       };
 
-      // Start recording
       mediaRecorder.start();
 
-      // Countdown logic
-      const countdownInterval = setInterval(() => {
+      countdownIntervalRef.current = setInterval(() => {
         setCountdown((prevCountdown) => {
           if (prevCountdown > 1) {
             return prevCountdown - 1;
           } else {
-            clearInterval(countdownInterval);
+            clearCountdownInterval();
             mediaRecorder.stop();
             setRecording(false);
             return 0;
           }
         });
-      }, 1000); // Decrease countdown every second
+      }, ticking);
 
-      // Stop recording automatically after 1 minute (60,000 ms)
-      setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         mediaRecorder.stop();
         setRecording(false);
-        clearInterval(countdownInterval);
-      }, 6000); // 60 seconds
+        clearCountdownInterval();
+        setTimeout(() => {
+          setOpen(false);
+        }, 150);
+      }, timerValueInMs);
     }
   };
 
   const stopRecording = () => {
-    // Manually stop recording if needed
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
       setRecording(false);
+
+      clearCountdownInterval();
+      clearTimeout(timeoutRef.current!);
+
+      setTimeout(() => {
+        setOpen(false);
+      }, 300);
     }
   };
 
   const handleOpen = () => {
     setOpen(true);
-    // Start with the front camera by default
     startCamera("user");
   };
 
@@ -127,7 +128,19 @@ const VideoRecorder: React.FC = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
     }
+    clearCountdownInterval();
   };
+
+  const clearCountdownInterval = () => {
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+  };
+
+  const progressPercentage = (countdown / countDownInSeconds) * 100;
+
+  console.log(progressPercentage, "lol"); // This should stop after recording stops
 
   return (
     <div>
@@ -142,8 +155,8 @@ const VideoRecorder: React.FC = () => {
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            width: "90vw",
-            height: "90vh",
+            width: "80vw",
+            height: "80vh",
             bgcolor: "black",
             display: "flex",
             flexDirection: "column",
@@ -155,12 +168,11 @@ const VideoRecorder: React.FC = () => {
           <video
             ref={videoRef}
             autoPlay
-            muted
-            style={{ width: "100%", height: "auto", maxHeight: "80%" }}
+            style={{ width: "90%", maxHeight: "100%" }}
           />
           {recording && (
             <Typography sx={{ color: "white", position: "absolute", top: 10 }}>
-              Time Remaining: {countdown} seconds
+              Time Remaining: {Math.ceil(countdown / 5)} seconds
             </Typography>
           )}
           <Box
@@ -175,19 +187,17 @@ const VideoRecorder: React.FC = () => {
             <IconButton
               onClick={!recording ? startRecording : stopRecording}
               sx={{
-                bgcolor: "white",
+                position: "relative",
                 width: 80,
                 height: 80,
                 borderRadius: "50%",
-                border: "5px solid red",
+                background: `conic-gradient(red ${progressPercentage}%, white ${progressPercentage}% 100%)`,
+                border: "none",
               }}
             >
-              <div style={{ fontSize: 40, color: recording ? "red" : "black" }}>
-                camera icon
-              </div>
-              {/* <CameraIcon
-                sx={{ fontSize: 40, color: recording ? "red" : "black" }}
-              /> */}
+              <div
+                style={{ fontSize: 40, color: recording ? "red" : "black" }}
+              ></div>
             </IconButton>
           </Box>
           <Button
@@ -199,7 +209,7 @@ const VideoRecorder: React.FC = () => {
             }}
             onClick={toggleCamera}
           >
-            Switch to {usingBackCamera ? "Front" : "Back"} Camera
+            Switch Camera
           </Button>
         </Box>
       </Modal>
