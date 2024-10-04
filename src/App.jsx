@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import VideoRecorder from "./components/videoRecorder";
-import VideoRecorderCapture from "./components/videoRecorderCapture";
+import VideoRecorderNative from "./components/videoRecorderNative";
+import VideoRecorderCustom from "./components/VideoRecorderCustom";
 
 function Home() {
   return <h2>Home Page</h2>;
@@ -12,20 +12,26 @@ function App() {
       <div>
         <nav>
           <ul>
-            <li>
-              <Link to="/videotest">Desktop</Link>
+            <li style={{ marginBottom: "50px" }}>
+              <Link to="/VideoRecorderNative">Native Video</Link>
             </li>
             <li>
-              <Link to="/videotestcapture">mobile</Link>
+              <Link to="/VideoRecorderCustom">Custom Video</Link>
             </li>
           </ul>
         </nav>
 
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/videotest" element={<VideoRecorder />} />
+          <Route
+            path="/VideoRecorderNative"
+            element={<VideoRecorderNative />}
+          />
 
-          <Route path="/videotestcapture" element={<VideoRecorderCapture />} />
+          <Route
+            path="/VideoRecorderCustom"
+            element={<VideoRecorderCustom />}
+          />
         </Routes>
       </div>
     </Router>
