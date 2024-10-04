@@ -30,7 +30,10 @@ const VideoRecorderCustom: React.FC = () => {
   const [isPaused, setIsPaused] = useState<boolean>(false); // Track pause/resume state
   const [isPhotoMode, setIsPhotoMode] = useState<boolean>(false); // Toggle between video and photo mode
   const [photoURL, setPhotoURL] = useState<string | null>(null); // Store the captured photo
-
+  const [videoSize, setVideoSize] = useState<number | null>(null); // Store video size
+  const [videoDuration, setVideoDuration] = useState<number | null>(null); // Store video duration
+  const [resolution, setResolution] = useState<string | null>(null); // Store the selected resolution
+  console.log(resolution);
   const startCamera = async (facingMode: "user" | "environment") => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -38,7 +41,13 @@ const VideoRecorderCustom: React.FC = () => {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { exact: facingMode } },
+        video: {
+          facingMode: { exact: facingMode },
+          width: { ideal: resolution ? parseInt(resolution) : undefined }, // Use the selected resolution
+          height: {
+            ideal: resolution ? (parseInt(resolution) * 9) / 16 : undefined,
+          }, // Maintain aspect ratio
+        },
         audio: true, // Ensure audio is captured
       });
 
@@ -55,6 +64,10 @@ const VideoRecorderCustom: React.FC = () => {
         startCamera("user");
       }
     }
+  };
+
+  const sizeInMB = (size: number | null) => {
+    return size ? `${(size / (1024 * 1024)).toFixed(2)}MB` : "0.00MB";
   };
 
   useEffect(() => {
@@ -91,6 +104,7 @@ const VideoRecorderCustom: React.FC = () => {
         const blob = new Blob(chunksRef.current, { type: "video/mp4" });
         const videoURL = URL.createObjectURL(blob);
         setVideoURL(videoURL);
+        setVideoSize(blob.size); // Set the size of the recorded video
       };
 
       mediaRecorder.start();
@@ -106,6 +120,7 @@ const VideoRecorderCustom: React.FC = () => {
             setTimeout(() => {
               handleClose();
             }, 150);
+            setVideoDuration(prevCountdown);
             return 0;
           }
         });
@@ -117,7 +132,7 @@ const VideoRecorderCustom: React.FC = () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
       setRecording(false);
-
+      setVideoDuration(countdown);
       clearCountdownInterval();
       // clearTimeout(timeoutRef.current!);
 
@@ -161,6 +176,10 @@ const VideoRecorderCustom: React.FC = () => {
   };
 
   const handleOpen = () => {
+    if ((resolution ?? "").length < 2) {
+      alert("Please select resolution");
+      return;
+    }
     setOpen(true);
     startCamera("user");
   };
@@ -210,6 +229,21 @@ const VideoRecorderCustom: React.FC = () => {
 
   return (
     <div>
+      {/* Resolution Dropdown */}
+      <Box sx={{ marginBottom: "2rem" }}>
+        <select
+          value={resolution || ""}
+          onChange={(e) => setResolution(e.target.value)}
+          style={{}}
+        >
+          <option value="" disabled>
+            Please select resolution
+          </option>
+          <option value="480">480p</option>
+          <option value="720">720p</option>
+          <option value="1080">1080p</option>
+        </select>
+      </Box>
       <Button variant="contained" onClick={handleOpen}>
         Open Camera
       </Button>
@@ -509,10 +543,20 @@ const VideoRecorderCustom: React.FC = () => {
       )}
 
       {videoURL && (
-        <Box sx={{ marginTop: "1rem" }}>
+        <Box
+          sx={{ marginTop: "1rem", display: "flex", flexDirection: "column" }}
+        >
           <video controls style={{ width: "100%", maxWidth: "300px" }}>
             <source src={videoURL} type="video/mp4" />
           </video>
+          <Box>
+            <span style={{ fontWeight: "700" }}>Duration:</span>{" "}
+            {countDownInSeconds - (videoDuration ?? 0)}seconds
+          </Box>
+          <Box>
+            <span style={{ fontWeight: "700" }}> Size: </span>
+            {sizeInMB(videoSize)}
+          </Box>
         </Box>
       )}
 
