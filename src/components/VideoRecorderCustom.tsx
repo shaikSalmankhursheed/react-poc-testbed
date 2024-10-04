@@ -222,7 +222,7 @@ const VideoRecorderCustom: React.FC = () => {
             left: "50%",
             transform: "translate(-50%, -50%)",
             width: "100vw",
-            height: "100vh",
+            height: "100dvh",
             bgcolor: "black",
             display: "flex",
             flexDirection: "column",
