@@ -269,6 +269,7 @@ const VideoRecorderCustom: React.FC = () => {
             ref={videoRef}
             autoPlay
             muted
+            playsInline
             style={{ width: "90%", maxHeight: "100%" }}
           />{" "}
           <Box
