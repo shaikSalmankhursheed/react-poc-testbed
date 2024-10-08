@@ -15,15 +15,15 @@ const VideoRecorderNativeTest: React.FC = () => {
       video.src = URL.createObjectURL(file);
 
       video.onloadedmetadata = () => {
-        if (video.duration > 10) {
-          setErrorMessage("Video exceeds the 10-second limit.");
-          setVideoFile(null);
-        } else {
-          setErrorMessage("");
-          setVideoFile(file);
-          setVideoDuration(video.duration); // Set the duration
-          setVideoSize(file.size / (1024 * 1024)); // Convert bytes to MB
-        }
+        // if (video.duration > 60) {
+        //   setErrorMessage("Video exceeds the 10-second limit.");
+        //   setVideoFile(null);
+        // } else {
+        setErrorMessage("");
+        setVideoFile(file);
+        setVideoDuration(video.duration); // Set the duration
+        setVideoSize(file.size / (1024 * 1024)); // Convert bytes to MB
+        // }
       };
     }
   };
