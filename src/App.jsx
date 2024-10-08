@@ -13,10 +13,10 @@ function App() {
       <div>
         <nav>
           <ul>
-            <li style={{ marginBottom: "50px" }}>
+            <li style={{ marginBottom: "30px" }}>
               <Link to="/VideoRecorderNative">Native Video</Link>
             </li>
-            <li>
+            <li style={{ marginBottom: "30px" }}>
               <Link to="/VideoRecorderNative1">Native Video with sizing</Link>
             </li>
             <li>
