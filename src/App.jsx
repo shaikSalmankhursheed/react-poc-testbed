@@ -19,11 +19,11 @@ function App() {
             <li>
               <Link to="/VideoRecorderCustom">Custom Video</Link>
             </li>
-            <li>
-              <Link to="/VideoRecorderCustomSize">
+            {/* <li>
+              <Link to="/VideoRecorderCustom1">
                 Custom Video with sizing
               </Link>
-            </li>
+            </li> */}
           </ul>
         </nav>
 
@@ -39,7 +39,7 @@ function App() {
           />
           VideoRecorderNativeTest
           <Route
-            path="/VideoRecorderCustomSize"
+            path="/VideoRecorderCustom1"
             element={<VideoRecorderNativeTest />}
           />
         </Routes>
