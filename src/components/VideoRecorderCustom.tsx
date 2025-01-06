@@ -9,6 +9,20 @@ import IconButton from "@mui/material/IconButton";
 import Modal from "@mui/material/Modal";
 import { Box } from "@mui/system";
 
+const generateBlackThumbnail = (): string => {
+  const canvas = document.createElement("canvas");
+  canvas.width = 900; // Set the dimensions of the thumbnail
+  canvas.height = 900; // 16:9 aspect ratio
+  const context = canvas.getContext("2d");
+
+  if (context) {
+    context.fillStyle = "black"; // Fill the canvas with black
+    context.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  return canvas.toDataURL("image/png"); // Return a base64 URL of the black image
+};
+
 const VideoRecorderCustom: React.FC = () => {
   const countDownInSeconds = 60; // 60seconds
   const countDownInMinutes = `01:00`;
@@ -226,6 +240,13 @@ const VideoRecorderCustom: React.FC = () => {
       remainingSeconds
     ).padStart(2, "0")}`;
   };
+
+  const [posterUrl, setPosterUrl] = useState<string>("");
+  useEffect(() => {
+    // Generate the black thumbnail on component mount
+    const blackThumbnail = generateBlackThumbnail();
+    setPosterUrl(blackThumbnail);
+  }, []);
 
   return (
     <div>
@@ -549,7 +570,8 @@ const VideoRecorderCustom: React.FC = () => {
         >
           <video controls style={{ width: "100%", maxWidth: "300px" }}             preload="auto"
 >
-            <source src={`${videoURL}#t=0.001`} type="video/mp4" />
+            <source src={`${videoURL}#t=0.001`} type="video/mp4"           poster={posterUrl}
+            />
           </video>
           <Box>
             <span style={{ fontWeight: "700" }}>Duration:</span>{" "}
