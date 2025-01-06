@@ -549,7 +549,7 @@ const VideoRecorderCustom: React.FC = () => {
         >
           <video controls style={{ width: "100%", maxWidth: "300px" }}             preload="auto"
 >
-            <source src={videoURL} type="video/mp4" />
+            <source src={`${videoURL}#t=0.001`} type="video/mp4" />
           </video>
           <Box>
             <span style={{ fontWeight: "700" }}>Duration:</span>{" "}
