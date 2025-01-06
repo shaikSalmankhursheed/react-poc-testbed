@@ -267,7 +267,7 @@ const VideoRecorderCustom: React.FC = () => {
         >
           <video
             ref={videoRef}
-            autoPlay
+            preload="auto"
             muted
             playsInline
             style={{ width: "90%", maxHeight: "100%" }}
