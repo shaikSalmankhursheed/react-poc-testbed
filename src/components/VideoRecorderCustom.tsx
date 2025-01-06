@@ -267,7 +267,7 @@ const VideoRecorderCustom: React.FC = () => {
         >
           <video
             ref={videoRef}
-            preload="auto"
+            autoplay
             muted
             playsInline
             style={{ width: "90%", maxHeight: "100%" }}
@@ -547,7 +547,8 @@ const VideoRecorderCustom: React.FC = () => {
         <Box
           sx={{ marginTop: "1rem", display: "flex", flexDirection: "column" }}
         >
-          <video controls style={{ width: "100%", maxWidth: "300px" }}>
+          <video controls style={{ width: "100%", maxWidth: "300px" }}             preload="auto"
+>
             <source src={videoURL} type="video/mp4" />
           </video>
           <Box>
