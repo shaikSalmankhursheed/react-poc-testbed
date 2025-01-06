@@ -292,7 +292,7 @@ const VideoRecorderCustom: React.FC = () => {
             muted
             playsInline
             style={{ width: "90%", maxHeight: "100%" }}
-            autoplay
+            autoPlay
           />{" "}
           <Box
             sx={{
